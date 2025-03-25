@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { ExpertsLists } from "../../../services/Options";
 import { BlurFade } from "@/components/ui/blur-fade";
+import UserInputDialog from "./UserInputDialog";
 const FeatureAssistant = () => {
   const user = useUser();
   return (
@@ -29,14 +30,18 @@ const FeatureAssistant = () => {
               key={expert.name}
               className="p-3 bg-secondary rounded-3xl flex flex-col items-center justify-center"
             >
-              <Image
-                src={expert.image}
-                alt={expert.name}
-                width={150}
-                height={150}
-                className="h-[70px] w-[70px] hover:rotate-12 transition-all duration-300"
-              />
-              <h2 className="mt-2 text-lg font-medium">{expert.name}</h2>
+              <UserInputDialog expert={expert}>
+                <div key={expert.name} className="flex flex-col">
+                  <Image
+                    src={expert.image}
+                    alt={expert.name}
+                    width={150}
+                    height={150}
+                    className="h-[70px] w-[70px] hover:rotate-12 transition-all duration-300 mx-auto"
+                  />
+                  <h2 className="mt-2 font-medium">{expert.name}</h2>
+                </div>
+              </UserInputDialog>
             </div>
           </BlurFade>
         ))}
