@@ -7,15 +7,37 @@ import {
   DialogDescription,
   DialogFooter,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import Image from "next/image";
 import { useState } from "react";
 import { ExpertDetails } from "../../../services/Options";
+import { useMutation } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 function UserInputDialog({ children, expert }) {
+  const router = useRouter();
   const [selectedExpert, setSelectedExpert] = useState();
   const [topic, setTopic] = useState();
+  const [loading, setLoading] = useState(false);
+  const createDiscussionRoom = useMutation(
+    api.DiscussionRoom.createDiscussionRoom,
+  );
+  const onClick = async () => {
+    setLoading(true);
+    const discussionRoomId = await createDiscussionRoom({
+      topic: topic,
+      expert: selectedExpert,
+      coachingOption: expert?.name,
+    });
+    console.log(discussionRoomId);
+    // router.push(`/dashboard/discussion-room/${discussionRoomId}`);
+    setLoading(false);
+  };
+
   return (
     <Dialog>
       <DialogTrigger>{children}</DialogTrigger>
@@ -35,7 +57,7 @@ function UserInputDialog({ children, expert }) {
                 onChange={(e) => setTopic(e.target.value)}
               />
               <h2 className="mt-5 text-black">
-                Enter a topic to skills in {expert.name}
+                Select the expert you want to skills in
               </h2>
               <div className="grid grid-cols-4 mt-3 gap-2">
                 {ExpertDetails.map((expert) => (
@@ -58,8 +80,15 @@ function UserInputDialog({ children, expert }) {
                 ))}
               </div>
               <div className="flex justify-end gap-5 mt-5">
-                <Button variant="outline">Cancel</Button>
-                <Button disabled={!topic || !selectedExpert}>Next</Button>
+                <DialogClose asChild>
+                  <Button variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button
+                  disabled={!topic || !selectedExpert || loading}
+                  onClick={onClick}
+                >
+                  {loading ? <Loader2 className="animate-spin" /> : "Next"}
+                </Button>
               </div>
             </div>
           </DialogDescription>

@@ -7,4 +7,11 @@ export default defineSchema({
     credit: v.number(),
     subscriptionId: v.optional(v.string()),
   }),
+
+  DiscussionRoom: defineTable({
+    coachingOption: v.string(),
+    topic: v.string(),
+    expert: v.string(),
+    conversation: v.optional(v.any()),
+  }),
 });
