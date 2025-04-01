@@ -23,6 +23,7 @@ function UserInputDialog({ children, expert }) {
   const [selectedExpert, setSelectedExpert] = useState();
   const [topic, setTopic] = useState();
   const [loading, setLoading] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
   const createDiscussionRoom = useMutation(
     api.DiscussionRoom.createDiscussionRoom,
   );
@@ -34,12 +35,13 @@ function UserInputDialog({ children, expert }) {
       coachingOption: expert?.name,
     });
     console.log(discussionRoomId);
-    // router.push(`/dashboard/discussion-room/${discussionRoomId}`);
+    router.push(`/discussion-room/${discussionRoomId}`);
     setLoading(false);
+    setOpenDialog(false);
   };
 
   return (
-    <Dialog>
+    <Dialog open={openDialog} onOpenChange={setOpenDialog}>
       <DialogTrigger>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
