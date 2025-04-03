@@ -35,9 +35,9 @@ function UserInputDialog({ children, expert }) {
       coachingOption: expert?.name,
     });
     console.log(discussionRoomId);
-    router.push(`/discussion-room/${discussionRoomId}`);
     setLoading(false);
     setOpenDialog(false);
+    router.push(`/discussion-room/${discussionRoomId}`);
   };
 
   return (
