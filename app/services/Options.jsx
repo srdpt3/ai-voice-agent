@@ -8,15 +8,15 @@ export const ExpertsLists = [
     image: "/interview.png",
   },
   {
-    name: "Q and A",
+    name: "Ask Me Anything",
     image: "/qa.png",
   },
   {
-    name: "Languates Skil",
+    name: "Language Skill",
     image: "/language.png",
   },
   {
-    name: "Medidation",
+    name: "Meditation",
     image: "/meditation.png",
   },
 ];

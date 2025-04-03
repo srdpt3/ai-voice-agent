@@ -7,12 +7,20 @@ import Image from "next/image";
 import { ExpertDetails } from "app/services/Options";
 import { UserButton } from "@stackframe/stack";
 import { Button } from "@/components/ui/button";
+// import RecordRTC from "recordrtc";
+import { useRef } from "react";
+import dynamic from "next/dynamic";
 function DiscussionRoomPage() {
   const { roomid } = useParams();
   const [expert, setExpert] = useState(null);
+  const [enableMicrophone, setEnableMicrophone] = useState(false);
+  const [recorder, setRecorder] = useState(null);
   const discussionRoom = useQuery(api.DiscussionRoom.GetDiscussionRoom, {
     id: roomid,
   });
+  const RecordRTC = dynamic(() => import("recordrtc"), { ssr: false });
+  const recorderCurrent = useRef(null);
+  let silenceTimeout = null;
   console.log(discussionRoom);
   useEffect(() => {
     if (discussionRoom) {
@@ -22,6 +30,57 @@ function DiscussionRoomPage() {
       setExpert(Expert);
     }
   }, [discussionRoom]);
+
+  const connectToServer = () => {
+    setEnableMicrophone(true);
+    if (typeof window !== "undefined" && typeof navigator !== "undefined") {
+      navigator.mediaDevices
+        .getUserMedia({ audio: true })
+        .then((stream) => {
+          // Import RecordRTC dynamically
+          import("recordrtc").then((RecordRTCModule) => {
+            const RecordRTC = RecordRTCModule.default;
+
+            // Create a new RecordRTC instance
+            recorderCurrent.current = new RecordRTC(stream, {
+              type: "audio",
+              mimeType: "audio/webm;codecs=pcm",
+              recorderType: RecordRTC.StereoAudioRecorder,
+              timeSlice: 250,
+              desiredSampRate: 16000,
+              numberOfAudioChannels: 1,
+              bufferSize: 4096,
+              audioBitsPerSecond: 128000,
+              ondataavailable: async (blob) => {
+                // Reset the silence detection timer on audio input
+                clearTimeout(silenceTimeout);
+
+                const buffer = await blob.arrayBuffer();
+                console.log(buffer);
+
+                // Restart the silence detection timer
+                silenceTimeout = setTimeout(() => {
+                  console.log("User stopped talking");
+                  // Handle user stopped talking (e.g., send final transcript, stop recording, etc.)
+                }, 2000);
+              },
+            });
+
+            // Start recording
+            recorderCurrent.current.startRecording();
+            console.log("Microphone access granted");
+          });
+        })
+        .catch((err) => console.error(err));
+    }
+  };
+
+  const disconnectFromServer = (e) => {
+    e.preventDefault();
+    recorderCurrent.current.pauseRecording();
+    recorderCurrent.current = null;
+    setEnableMicrophone(false);
+  };
 
   return (
     <div className="-mt-12">
@@ -45,8 +104,21 @@ function DiscussionRoomPage() {
               <UserButton />
             </div>
           </div>
-          <div className="mt-5 flex justify-cente  r items-center">
-            <Button>Connect</Button>
+          <div className="mt-5 flex justify-center items-center">
+            {!enableMicrophone ? (
+              <Button
+                onClick={connectToServer}
+                className={
+                  enableMicrophone ? "bg-green-500 hover:bg-green-600" : ""
+                }
+              >
+                {enableMicrophone ? "Connected" : "Connect"}
+              </Button>
+            ) : (
+              <Button variant="destructive" onClick={disconnectFromServer}>
+                Disconnect
+              </Button>
+            )}
           </div>
         </div>
         <div>
