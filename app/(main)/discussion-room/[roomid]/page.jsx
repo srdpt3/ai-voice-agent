@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { useRef } from "react";
 import dynamic from "next/dynamic";
 import * as AssemblyAI from "assemblyai";
-import { getToken } from "app/services/GlobalServices";
+import { getToken, AIModel } from "app/services/GlobalServices";
+import { Loader2 } from "lucide-react";
 function DiscussionRoomPage() {
   const { roomid } = useParams();
   const [expert, setExpert] = useState(null);
@@ -19,6 +20,7 @@ function DiscussionRoomPage() {
   const [recorder, setRecorder] = useState(null);
   const [transcript, setTranscript] = useState("");
   const [conversation, setConversation] = useState([]);
+  const [loading, setLoading] = useState(false);
   let text = {};
   const discussionRoom = useQuery(api.DiscussionRoom.GetDiscussionRoom, {
     id: roomid,
@@ -39,7 +41,7 @@ function DiscussionRoomPage() {
   const connectToServer = async () => {
     setEnableMicrophone(true);
     //Init AssemblyAI
-
+    setLoading(true);
     const token = await getToken();
     realTimeTrascriber.current = new AssemblyAI.RealtimeTranscriber({
       token: token,
@@ -57,6 +59,20 @@ function DiscussionRoomPage() {
             content: transcript?.text,
           },
         ]);
+        // Calling AI text Model to get Response
+        const response = await AIModel(
+          discussionRoom?.topic,
+          discussionRoom?.coachingOption,
+          transcript?.text,
+        );
+        console.log(response);
+        setConversation((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: response,
+          },
+        ]);
       }
       text[transcript.audio_start] = transcript?.text;
       const keys = Object.keys(text);
@@ -70,7 +86,7 @@ function DiscussionRoomPage() {
     });
 
     await realTimeTrascriber.current.connect();
-
+    setLoading(false);
     if (typeof window !== "undefined" && typeof navigator !== "undefined") {
       navigator.mediaDevices
         .getUserMedia({ audio: true })
@@ -116,7 +132,7 @@ function DiscussionRoomPage() {
 
   const disconnectFromServer = async (e) => {
     e.preventDefault();
-
+    setLoading(true);
     if (realTimeTrascriber.current) {
       // Check if close method exists (newer versions of the API might use close instead of disconnect)
       if (typeof realTimeTrascriber.current.close === "function") {
@@ -134,6 +150,7 @@ function DiscussionRoomPage() {
     }
 
     setEnableMicrophone(false);
+    setLoading(false);
   };
 
   return (
@@ -165,12 +182,19 @@ function DiscussionRoomPage() {
                 className={
                   enableMicrophone ? "bg-green-500 hover:bg-green-600" : ""
                 }
+                disabled={loading}
               >
-                {enableMicrophone ? "Connected" : "Connect"}
+                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                {!loading && "Connect"}
               </Button>
             ) : (
-              <Button variant="destructive" onClick={disconnectFromServer}>
-                Disconnect
+              <Button
+                variant="destructive"
+                onClick={disconnectFromServer}
+                disabled={loading}
+              >
+                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                {!loading && "Disconnect"}
               </Button>
             )}
           </div>
