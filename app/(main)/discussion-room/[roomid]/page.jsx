@@ -7,6 +7,7 @@ import Image from "next/image";
 import { ExpertDetails } from "app/services/Options";
 import { UserButton } from "@stackframe/stack";
 import { Button } from "@/components/ui/button";
+import ChatBox from "./_components/ChatBox";
 // import RecordRTC from "recordrtc";
 import { useRef } from "react";
 import dynamic from "next/dynamic";
@@ -19,9 +20,20 @@ function DiscussionRoomPage() {
   const [enableMicrophone, setEnableMicrophone] = useState(false);
   const [recorder, setRecorder] = useState(null);
   const [transcript, setTranscript] = useState("");
-  const [conversation, setConversation] = useState([]);
+  const [conversation, setConversation] = useState([
+    {
+      role: "assistant",
+      content: "Hello, how can I help you today?",
+    },
+    {
+      role: "user",
+      content: "Hi I am {user_name},",
+    },
+  ]);
   const [loading, setLoading] = useState(false);
+
   let text = {};
+
   const discussionRoom = useQuery(api.DiscussionRoom.GetDiscussionRoom, {
     id: roomid,
   });
@@ -66,13 +78,7 @@ function DiscussionRoomPage() {
           transcript?.text,
         );
         console.log(response);
-        setConversation((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: response,
-          },
-        ]);
+        setConversation((prev) => [...prev, response]);
       }
       text[transcript.audio_start] = transcript?.text;
       const keys = Object.keys(text);
@@ -156,8 +162,8 @@ function DiscussionRoomPage() {
   return (
     <div className="-mt-12">
       <h2 className="text-lg font-bold">{discussionRoom?.coachingOption}</h2>
-      <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-10">
-        <div className="lg:col- span-2 ">
+      <div className="mt-5 grid grid-cols-2 lg:grid-cols-3 gap-10">
+        <div className="lg:col-span-2 ">
           <div className="h-[60vh] bg-secondary border rounded-4xl flex flex-col justify-center items-center relative">
             {expert?.avatar ? (
               <Image
@@ -200,13 +206,7 @@ function DiscussionRoomPage() {
           </div>
         </div>
         <div>
-          <div className="h-[60vh] bg-secondary border rounded-4xl flex flex-col justify-center items-center relative">
-            <h2 className="text-gray-500 ">Chat Section</h2>
-          </div>
-          <h2 className="text-gray-500 mt-4 text-sm ">
-            At the end of conversation we will automatically generate a summary
-            of the conversation and send it to you.
-          </h2>
+          <ChatBox conversation={conversation} />
         </div>
       </div>
       <div className="mt-5">
