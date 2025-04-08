@@ -27,7 +27,7 @@ function DiscussionRoomPage() {
     },
     {
       role: "user",
-      content: "Hi I am {user_name},",
+      content: "Hi",
     },
   ]);
   const [loading, setLoading] = useState(false);
@@ -50,6 +50,25 @@ function DiscussionRoomPage() {
     }
   }, [discussionRoom]);
 
+  useEffect(() => {
+    async function fetchData() {
+      if (conversation[conversation.length - 1].role === "user") {
+        // Calling AI text Model to Get Response
+        const lastTwoMsg = conversation.slice(-2);
+        const aiResp = await AIModel(
+          discussionRoom?.topic,
+          discussionRoom?.coachingOption,
+          lastTwoMsg,
+        );
+
+        console.log(aiResp);
+        setConversation((prev) => [...prev, aiResp]);
+      }
+    }
+
+    fetchData();
+  }, [conversation]);
+
   const connectToServer = async () => {
     setEnableMicrophone(true);
     //Init AssemblyAI
@@ -57,7 +76,7 @@ function DiscussionRoomPage() {
     const token = await getToken();
     realTimeTrascriber.current = new AssemblyAI.RealtimeTranscriber({
       token: token,
-      sample_rate: 16000,
+      sample_rate: 44100,
     });
 
     realTimeTrascriber.current.on("transcript", async (transcript) => {
@@ -71,14 +90,7 @@ function DiscussionRoomPage() {
             content: transcript?.text,
           },
         ]);
-        // Calling AI text Model to get Response
-        const response = await AIModel(
-          discussionRoom?.topic,
-          discussionRoom?.coachingOption,
-          transcript?.text,
-        );
-        console.log(response);
-        setConversation((prev) => [...prev, response]);
+        // AI response will be handled by the useEffect
       }
       text[transcript.audio_start] = transcript?.text;
       const keys = Object.keys(text);
@@ -107,7 +119,7 @@ function DiscussionRoomPage() {
               mimeType: "audio/webm;codecs=pcm",
               recorderType: RecordRTC.StereoAudioRecorder,
               timeSlice: 250,
-              desiredSampRate: 16000,
+              desiredSampRate: 44100,
               numberOfAudioChannels: 1,
               bufferSize: 4096,
               audioBitsPerSecond: 128000,
@@ -209,10 +221,10 @@ function DiscussionRoomPage() {
           <ChatBox conversation={conversation} />
         </div>
       </div>
-      <div className="mt-5">
+      {/* <div className="mt-5">
         <h2 className="text-gray-500 ">Transcript</h2>
         <div className="mt-2 text-sm">{transcript}</div>
-      </div>
+      </div> */}
     </div>
   );
 }

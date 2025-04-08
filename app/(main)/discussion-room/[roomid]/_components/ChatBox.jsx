@@ -13,14 +13,11 @@ const ChatBox = ({ conversation }) => {
               }  `}
             >
               {message.role === "assistant" ? (
-                <div className="p-1 px-2 bg-primary  mt-1 rounded-md text-white inline-block">
+                <div className="p-1 px-2 bg-primary  mt-2 rounded-md text-white inline-block">
                   {message.content}
                 </div>
               ) : (
-                <div
-                  className="p-1 px-2 bg-gray-200  mt-1 rounded-md text-black 
-                flex justify-end inline-block"
-                >
+                <div className="p-1 px-2 bg-gray-200  mt-2 rounded-md text-black flex justify-end inline-block text-sm">
                   {message.content}
                 </div>
               )}
