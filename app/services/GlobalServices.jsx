@@ -1,7 +1,8 @@
 import axios from "axios";
 import OpenAI from "openai";
-import { PollyClient } from "@aws-sdk/client-polly";
+import { PollyClient, SynthesizeSpeechCommand } from "@aws-sdk/client-polly";
 import { ExpertsLists } from "./Options";
+
 export const getToken = async () => {
   const result = await axios.get("/api/getToken");
   console.log(result.data);
@@ -63,7 +64,7 @@ export const AIModel = async (topic, coachingOption, lastTwoMsg) => {
   }
 };
 
-const convertTextToSpeech = async (text) => {
+export const ConvertTextToSpeech = async (text, expertName) => {
   const pollyClient = new PollyClient({
     region: "us-east-1",
     credentials: {
@@ -71,4 +72,20 @@ const convertTextToSpeech = async (text) => {
       secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY,
     },
   });
+  const command = new SynthesizeSpeechCommand({
+    Text: text,
+    OutputFormat: "mp3",
+    VoiceId: "Amy",
+  });
+  try {
+    const { AudioStream } = await pollyClient.send(command);
+    const audioArrayBuffer = await AudioStream.transformToByteArray();
+
+    const audioBlob = new Blob([audioArrayBuffer], { type: "audio/mp3" });
+    const audioUrl = URL.createObjectURL(audioBlob);
+    return audioUrl;
+  } catch (error) {
+    console.error("Error in ConvertTextToSpeech:", error);
+    return null;
+  }
 };

@@ -12,7 +12,11 @@ import ChatBox from "./_components/ChatBox";
 import { useRef } from "react";
 import dynamic from "next/dynamic";
 import * as AssemblyAI from "assemblyai";
-import { getToken, AIModel } from "app/services/GlobalServices";
+import {
+  getToken,
+  AIModel,
+  ConvertTextToSpeech,
+} from "app/services/GlobalServices";
 import { Loader2 } from "lucide-react";
 function DiscussionRoomPage() {
   const { roomid } = useParams();
@@ -20,6 +24,7 @@ function DiscussionRoomPage() {
   const [enableMicrophone, setEnableMicrophone] = useState(false);
   const [recorder, setRecorder] = useState(null);
   const [transcript, setTranscript] = useState("");
+  const [audioUrl, setAudioUrl] = useState();
   const [conversation, setConversation] = useState([
     {
       role: "assistant",
@@ -60,8 +65,12 @@ function DiscussionRoomPage() {
           discussionRoom?.coachingOption,
           lastTwoMsg,
         );
-
-        console.log(aiResp);
+        const audioUrl = await ConvertTextToSpeech(
+          aiResp.content,
+          discussionRoom?.expert,
+        );
+        setAudioUrl(audioUrl);
+        console.log(audioUrl);
         setConversation((prev) => [...prev, aiResp]);
       }
     }
